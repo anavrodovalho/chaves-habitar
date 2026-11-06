@@ -178,9 +178,6 @@ select { appearance: auto; }
 
 /* Lista de chaves */
 .lista { display: grid; gap: 10px; margin-top: 12px; }
-@media (min-width: 680px) {
-  #lista-chaves { grid-template-columns: 1fr 1fr; align-items: start; }
-}
 
 .chave {
   background: var(--branco);
@@ -399,6 +396,78 @@ select { appearance: auto; }
 }
 .aviso-sucesso { background: #1A5C3A; }
 .aviso-erro { background: var(--erro); }
+
+/* Tablet e desktop: o conteúdo ocupa a largura toda, em grade */
+@media (min-width: 680px) {
+  .conteudo { max-width: none; padding-left: 24px; padding-right: 24px; }
+
+  #lista-chaves {
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px;
+  }
+  .chave { display: flex; flex-direction: column; }
+  .chave-info { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+
+  #lista-historico {
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    align-items: start;
+  }
+  .filtro-historico { grid-template-columns: 2fr 1fr 1.4fr 1fr 1fr; }
+  .filtro-historico .largo { grid-column: auto; }
+
+  #botao-nova-chave { width: auto; padding: 12px 28px; }
+  .lista-admin {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0 24px;
+    padding: 0 10px;
+  }
+  .item-admin:last-child { border-bottom: 1px solid var(--linha); }
+}
+
+/* Desktop: menu no topo, e busca e filtros na mesma linha */
+@media (min-width: 900px) {
+  .topo { gap: 14px; padding: 8px 32px; }
+  .topo-texto { flex: none; min-width: 130px; }
+
+  .abas {
+    position: static;
+    flex: 1;
+    gap: 4px;
+    margin-left: 18px;
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+  .aba {
+    flex: none;
+    min-height: 44px;
+    padding: 0 18px;
+    border-top: 0;
+    border-bottom: 3px solid transparent;
+    color: #D5DDD9;
+  }
+  .aba:hover { color: var(--branco); }
+  .aba[aria-current="page"] { border-bottom-color: var(--dourado); color: var(--branco); }
+
+  .conteudo { padding: 20px 32px 40px; }
+
+  #vista-painel {
+    display: grid;
+    grid-template-columns: minmax(300px, 440px) 1fr;
+    gap: 14px 16px;
+    align-items: center;
+  }
+  .cartoes, #lista-chaves { grid-column: 1 / -1; }
+  .cartoes { gap: 14px; }
+  .cartao { padding: 14px 8px; }
+  .cartao b { font-size: 30px; }
+  .cartao span { font-size: 13px; }
+  .busca, .filtros, #lista-chaves { margin: 0; }
+  .filtros { padding: 0; flex-wrap: wrap; overflow: visible; }
+
+  .avisos { bottom: 24px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .esqueleto { animation: none; }

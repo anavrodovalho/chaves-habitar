@@ -44,6 +44,11 @@
         <strong id="topo-titulo">Chaves</strong>
         <span id="topo-usuario"></span>
       </div>
+      <nav class="abas" aria-label="Seções">
+        <button class="aba" data-vista="painel" type="button">Painel</button>
+        <button class="aba" data-vista="historico" type="button">Histórico</button>
+        <button class="aba" data-vista="admin" type="button" hidden>Admin</button>
+      </nav>
       <button id="botao-sair" class="topo-sair" type="button">Sair</button>
     </header>
 
@@ -88,12 +93,6 @@
         <div id="lista-admin" class="lista-admin"></div>
       </section>
     </main>
-
-    <nav class="abas" aria-label="Seções">
-      <button class="aba" data-vista="painel" type="button">Painel</button>
-      <button class="aba" data-vista="historico" type="button">Histórico</button>
-      <button class="aba" data-vista="admin" type="button" hidden>Admin</button>
-    </nav>
   </div>
 
   <dialog id="janela" class="janela">
