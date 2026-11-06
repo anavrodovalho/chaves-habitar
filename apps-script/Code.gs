@@ -17,6 +17,7 @@ var ABA_CADASTRO = 'Cadastro das Chaves';
 var ABA_MOVIMENTOS = 'Entradas e Saídas';
 var ABA_LISTAS = 'Listas';
 var ABA_USUARIOS = 'Usuarios';
+var ABA_EXCLUIDAS = 'Chaves excluidas';
 
 var LINHA_DADOS = 4;              // a linha 3 é o cabeçalho
 var COL_CHAVE_CADASTRO = 1;       // A
@@ -51,7 +52,8 @@ var ACOES = {
   registrarSaida:  { fn: acaoRegistrarSaida, escrita: true },
   registrarEntrada:{ fn: acaoRegistrarEntrada, escrita: true },
   cadastrarChave:  { fn: acaoCadastrarChave, escrita: true },
-  editarChave:     { fn: acaoEditarChave, escrita: true, admin: true }
+  editarChave:     { fn: acaoEditarChave, escrita: true },
+  excluirChave:    { fn: acaoExcluirChave, escrita: true, admin: true }
 };
 
 function doGet() {
@@ -494,7 +496,7 @@ function reservarLinha_(aba, colunaChave, linhasNovas) {
   return linha;
 }
 
-// ─────────────── Cadastro (toda a equipe) e edição (só admin) ───────────────
+// ─────────────── Cadastro e edição (equipe), exclusão (só admin) ───────────────
 
 function acaoCadastrarChave(dados, usuario) {
   var ss = planilha_();
@@ -543,6 +545,66 @@ function acaoEditarChave(dados) {
   aba.getRange(chave.linha, 15).setValue(proteger_(campos.observacao));
   SpreadsheetApp.flush();
   return { chave: lerChaveNaLinha_(ss, aba, chave.linha) };
+}
+
+/**
+ * Apaga a chave e todos os movimentos dela, depois de guardar uma cópia na aba
+ * Chaves excluidas. As linhas são removidas com deleteRow, e não esvaziadas: um
+ * buraco no meio dos movimentos quebraria a regra de ordem cronológica, e movimentos
+ * órfãos passariam para outra chave que reusasse o mesmo código.
+ */
+function acaoExcluirChave(dados, usuario) {
+  var ss = planilha_();
+  var cadastro = ss.getSheetByName(ABA_CADASTRO);
+  var chave = chaveExistente_(ss, cadastro, dados.codigo);
+  var situacao = chave.dados.situacao;
+
+  if (situacao !== SITUACAO_DISPONIVEL && situacao !== SITUACAO_DEVOLVIDA) {
+    falha_(chave.dados.codigo + ' está com ' + (chave.dados.comQuem || 'outra pessoa') +
+      '. Registre a devolução antes de excluir.');
+  }
+
+  var movimentos = ss.getSheetByName(ABA_MOVIMENTOS);
+  var fuso = ss.getSpreadsheetTimeZone();
+  var valores = movimentos.getRange(LINHA_DADOS, 1, movimentos.getLastRow() - LINHA_DADOS + 1, 11).getValues();
+  var linhas = [];
+  var resumo = [];
+  valores.forEach(function (l, i) {
+    if (String(l[4]).trim().toUpperCase() !== chave.dados.codigo.toUpperCase()) return;
+    linhas.push(i + LINHA_DADOS);
+    resumo.push([formatarData_(l[0], fuso, 'dd/MM/yyyy'), l[2], l[3], l[7], l[8]].join(' · '));
+  });
+
+  // A cópia vem primeiro: se algo falhar depois, nada se perde.
+  guardarExclusao_(ss, chave.dados, usuario, resumo);
+
+  // De baixo para cima, para os números das linhas restantes não mudarem.
+  for (var i = linhas.length - 1; i >= 0; i--) {
+    movimentos.deleteRow(linhas[i]);
+  }
+  cadastro.deleteRow(chave.linha);
+  SpreadsheetApp.flush();
+  return { excluida: chave.dados.codigo, movimentos: linhas.length };
+}
+
+function guardarExclusao_(ss, c, usuario, resumo) {
+  var aba = ss.getSheetByName(ABA_EXCLUIDAS);
+  if (!aba) {
+    aba = ss.insertSheet(ABA_EXCLUIDAS);
+    aba.getRange(1, 1, 1, 13).setValues([[
+      'Excluída em', 'Excluída por', 'Código da chave', 'Código do imóvel', 'Nome do imóvel',
+      'Endereço', 'Bairro', 'Finalidade', 'Proprietário', 'Telefone', 'Quantidade',
+      'Observação', 'Movimentos apagados'
+    ]]).setFontWeight('bold').setBackground('#0D2040').setFontColor('#FFFFFF');
+    aba.setFrozenRows(1);
+  }
+  aba.getRange(aba.getLastRow() + 1, 1, 1, 13).setValues([[
+    proteger_(Utilities.formatDate(new Date(), FUSO, 'dd/MM/yyyy HH:mm')),
+    proteger_(usuario.nome), c.codigo, proteger_(c.codigoImovel), proteger_(c.nome),
+    proteger_(c.endereco), proteger_(c.bairro), c.finalidade, proteger_(c.proprietario),
+    proteger_(c.telefone), c.quantidade === null ? '' : c.quantidade, proteger_(c.observacao),
+    proteger_(resumo.join('\n').slice(0, 45000))
+  ]]);
 }
 
 function mesclar_(atual, novos) {

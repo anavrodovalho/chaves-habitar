@@ -286,6 +286,14 @@ function htmlAcao(chave) {
   return '';
 }
 
+function ehAdmin() {
+  return estado.sessao.perfil === 'admin';
+}
+
+function htmlBotaoEditar(chave) {
+  return `<button class="botao botao-claro botao-editar" type="button" data-acao="editar" data-codigo="${esc(chave.codigo)}">Editar</button>`;
+}
+
 function htmlSituacaoFora(chave) {
   if (chave.situacao === 'Devolvida ao proprietário') {
     return `<p class="chave-detalhe">Devolvida em ${esc(chave.retiradaEm)}</p>`;
@@ -309,7 +317,7 @@ function htmlChave(chave) {
         <div class="chave-local">${esc(textoQuantidade(chave.quantidade))}</div>
         ${htmlSituacaoFora(chave)}
       </button>
-      <div class="chave-acao">${htmlAcao(chave)}</div>
+      <div class="chave-acao">${htmlAcao(chave)}${htmlBotaoEditar(chave)}</div>
     </article>`;
 }
 
@@ -489,9 +497,7 @@ async function abrirDetalhe(codigo) {
   if (!chave) return;
   const digitos = chave.telefone.replace(/\D/g, '');
   const telefone = digitos ? `<a href="tel:+55${esc(digitos)}">${esc(chave.telefone)}</a>` : '–';
-  const editar = estado.sessao.perfil === 'admin'
-    ? `<button class="botao botao-claro" type="button" data-acao="editar" data-codigo="${esc(chave.codigo)}">Editar cadastro</button>`
-    : '';
+  const editar = `<button class="botao botao-claro" type="button" data-acao="editar" data-codigo="${esc(chave.codigo)}">Editar cadastro</button>`;
 
   abrirJanela(chave.codigo, `
     <p style="margin:0 0 8px">${selo(chave.situacao)}</p>
@@ -639,7 +645,39 @@ function htmlFormularioChave(chave, codigoSugerido) {
       </label>
       ${novo ? '<p class="ajuda" style="margin:0">A entrada inicial é registrada automaticamente.</p>' : ''}
       <button class="botao botao-principal" type="submit">${novo ? 'Cadastrar chave' : 'Salvar alterações'}</button>
+      ${novo ? '' : htmlOpcaoExcluir(c)}
     </form>`;
+}
+
+function htmlOpcaoExcluir(chave) {
+  if (!ehAdmin()) return '';
+  if (chave.situacao === 'Retirada' || chave.situacao === 'Atrasada') {
+    return '<p class="ajuda" style="margin:0">Para excluir esta chave, registre a devolução primeiro.</p>';
+  }
+  return `<button class="botao botao-perigo" type="button" data-acao="excluir" data-codigo="${esc(chave.codigo)}">Excluir chave</button>`;
+}
+
+function abrirExclusao(codigo) {
+  const chave = buscarChave(codigo);
+  if (!chave) return;
+  const c = esc(chave.codigo);
+  abrirJanela(`Excluir ${chave.codigo}?`, `
+    <div class="formulario">
+      <p style="margin:0"><strong>${esc(chave.nome)}</strong></p>
+      <p style="margin:0">O cadastro e todo o histórico desta chave vão sair do sistema. Uma cópia fica guardada na aba <strong>Chaves excluidas</strong> da planilha.</p>
+      <p class="ajuda" style="margin:0">Se o imóvel apenas saiu da carteira, prefira registrar uma saída com o motivo "Devolvida ao proprietário". Assim o histórico continua no sistema.</p>
+      <button class="botao botao-perigo-forte" type="button" data-acao="excluir-confirmado" data-codigo="${c}">Excluir definitivamente</button>
+      <button class="botao botao-claro" type="button" data-acao="editar" data-codigo="${c}">Cancelar</button>
+    </div>`);
+}
+
+function excluirChave(botao, codigo) {
+  return comBotao(botao, 'Excluindo…', async () => {
+    await api('excluirChave', { codigo });
+    fecharJanela();
+    avisar(`${codigo} excluída.`, 'sucesso');
+    await atualizarChaves();
+  });
 }
 
 async function abrirNovaChave(botao) {
@@ -687,6 +725,8 @@ function tratarCliqueAcao(evento) {
   if (acao === 'saida') abrirSaida(codigo);
   if (acao === 'detalhe') abrirDetalhe(codigo);
   if (acao === 'editar') abrirEdicao(codigo);
+  if (acao === 'excluir') abrirExclusao(codigo);
+  if (acao === 'excluir-confirmado') excluirChave(alvo, codigo);
   if (acao === 'recarregar') atualizarTudo();
   if (acao === 'nova-chave') abrirNovaChave(alvo);
   if (acao === 'devolucao') {

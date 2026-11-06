@@ -104,7 +104,9 @@ Faça estes testes em uma chave qualquer. No fim, os registros de teste podem se
 
 - O sistema escreve só em A:E e G:K de `Entradas e Saídas` e em A:I e O de `Cadastro das Chaves`.
 - A sessão vale até 8 horas. O cache do Google guarda no máximo 6 horas por vez, então quem ficar mais de 6 horas sem usar o sistema precisa entrar de novo.
-- Toda a equipe pode cadastrar chaves. Só o perfil `admin` edita o cadastro de uma chave.
+- Toda a equipe pode cadastrar e editar chaves. Só o perfil `admin` exclui uma chave.
+- Excluir apaga o cadastro e todos os movimentos da chave, e só funciona com a chave na imobiliária ou devolvida ao proprietário. Uma cópia fica na aba `Chaves excluidas`.
+- Para um imóvel que saiu da carteira, prefira registrar uma saída com o motivo `Devolvida ao proprietário`. O histórico continua no sistema.
 - Cinco PINs errados bloqueiam aquele nome por 15 minutos.
 - Quando chega à última linha preparada, o sistema abre novas linhas dentro da faixa das fórmulas, para que elas continuem lendo todos os registros.
 - Se alguém escrever direto na planilha, mantenha a ordem cronológica e não deixe linhas em branco no meio.
