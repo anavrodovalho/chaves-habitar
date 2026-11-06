@@ -794,27 +794,52 @@ function ativarEntregues() {
 function atualizarFormulaSituacao_(ss) {
   var aba = ss.getSheetByName(ABA_CADASTRO);
   var intervalo = aba.getRange(LINHA_DADOS, 10, aba.getLastRow() - LINHA_DADOS + 1, 1);
-  var padrao = /IF\(INDEX\('Entradas e Saídas'!\$H\$4:\$H\$\d+,P\d+\)="Devolvida ao proprietário","Devolvida ao proprietário",/;
+  var originais = intervalo.getFormulas();
   var alteradas = 0;
 
   // Monta todas as fórmulas antes de gravar: se uma linha for diferente do esperado,
   // nada é alterado.
-  var novas = intervalo.getFormulas().map(function (linha, i) {
+  var novas = originais.map(function (linha, i) {
     var formula = linha[0];
     if (formula.indexOf(SITUACAO_ENTREGUE) >= 0) return [formula];
-    var achado = padrao.exec(formula);
-    if (!achado) {
-      falha_('A fórmula da linha ' + (i + LINHA_DADOS) + ' da coluna Situação é diferente do esperado. Nada foi alterado.');
+    var nova = incluirCondicaoEntregue_(formula);
+    if (!nova) {
+      falha_('A fórmula da linha ' + (i + LINHA_DADOS) + ' da coluna Situação é diferente do esperado. ' +
+        'Nada foi alterado. Início da fórmula: ' + formula.slice(0, 220));
     }
     alteradas++;
-    var condicao = achado[0].slice(0, achado[0].indexOf('="')) +
-      '="' + SITUACAO_ENTREGUE + '","' + SITUACAO_ENTREGUE + '",';
-    return [formula.slice(0, achado.index) + condicao + formula.slice(achado.index) + ')'];
+    return [nova];
   });
 
   if (!alteradas) return 'Coluna Situação: já estava atualizada';
   intervalo.setFormulas(novas);
+  SpreadsheetApp.flush();
+
+  // A fórmula que o Google não entende vira erro na célula, sem aviso. Nesse caso
+  // as fórmulas antigas voltam.
+  var comErro = intervalo.getValues().some(function (l) { return String(l[0]).charAt(0) === '#'; });
+  if (comErro) {
+    intervalo.setFormulas(originais);
+    SpreadsheetApp.flush();
+    falha_('A nova fórmula deu erro na planilha. As fórmulas antigas foram restauradas. Início: ' +
+      novas[0][0].slice(0, 220));
+  }
   return 'Coluna Situação: fórmula atualizada em ' + alteradas + ' linhas';
+}
+
+/**
+ * Acrescenta a condição de entrega antes da condição de devolvida. Conforme o idioma
+ * da planilha, o Google devolve IF(...,...) ou SE(...;...), então a busca se apoia só
+ * no texto entre aspas, e a condição nova repete o mesmo idioma e o mesmo separador.
+ */
+function incluirCondicaoEntregue_(formula) {
+  var padrao = /([^\s(,;]+)\(\s*([^\s(,;]+\([^()]*\))\s*=\s*"Devolvida ao proprietário"\s*([,;])\s*"Devolvida ao proprietário"\s*[,;]/;
+  var achado = padrao.exec(formula);
+  if (!achado) return '';
+  var separador = achado[3];
+  var condicao = achado[1] + '(' + achado[2] + '="' + SITUACAO_ENTREGUE + '"' + separador +
+    '"' + SITUACAO_ENTREGUE + '"' + separador;
+  return formula.slice(0, achado.index) + condicao + formula.slice(achado.index) + ')';
 }
 
 function incluirMotivoEntregue_(ss) {
@@ -831,11 +856,12 @@ function incluirLinhaResumo_(ss) {
   var aba = ss.getSheetByName('Resumo');
   var linha = 10; // linha livre logo abaixo de "Devolvidas ao proprietário"
   if (String(aba.getRange(linha, 1).getValues()[0][0]).trim()) return 'Aba Resumo: não foi alterada';
-  var ultima = ss.getSheetByName(ABA_CADASTRO).getLastRow();
+  // Copia a fórmula da linha de cima, para sair no mesmo idioma da planilha.
+  var modelo = aba.getRange(linha - 1, 2).getFormula();
+  if (modelo.indexOf(SITUACAO_DEVOLVIDA) < 0) return 'Aba Resumo: não foi alterada';
   aba.getRange(linha - 1, 1, 1, 2).copyTo(aba.getRange(linha, 1, 1, 2), { formatOnly: true });
   aba.getRange(linha, 1).setValue('Entregues ao comprador');
-  aba.getRange(linha, 2).setFormula(
-    "=COUNTIF('" + ABA_CADASTRO + "'!$J$" + LINHA_DADOS + ':$J$' + ultima + ',"' + SITUACAO_ENTREGUE + '")');
+  aba.getRange(linha, 2).setFormula(modelo.replace(SITUACAO_DEVOLVIDA, SITUACAO_ENTREGUE));
   return 'Aba Resumo: linha "Entregues ao comprador" incluída';
 }
 
