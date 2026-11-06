@@ -273,7 +273,7 @@ function chavesVisiveis() {
   const lista = estado.chaves
     .filter((c) => estaEntregue(c) === entregues)
     .filter((c) => entregues || !estado.filtro || c.situacao === estado.filtro)
-    .filter((c) => contemTermo([c.codigo, c.codigoImovel, c.nome, c.endereco, c.bairro, c.comQuem], termo));
+    .filter((c) => contemTermo([c.codigo, c.codigoImovel, c.nome, c.endereco, c.bairro, c.comQuem, estaFora(c) ? c.motivo : ''], termo));
   if (entregues) {
     return lista.sort((a, b) => dataParaOrdenar(b.retiradaEm).localeCompare(dataParaOrdenar(a.retiradaEm)));
   }
@@ -333,7 +333,8 @@ function htmlSituacaoCard(chave) {
   }
   if (!estaFora(chave)) return '';
   const prazo = chave.devolucaoPrevista ? ` · volta ${esc(chave.devolucaoPrevista)}` : '';
-  return `<span class="chave-situacao">Com <b>${esc(chave.comQuem)}</b> ${esc(textoDias(chave.diasFora))}${prazo}</span>`;
+  const motivo = chave.motivo ? `<span class="chave-motivo">Motivo: ${esc(chave.motivo)}</span>` : '';
+  return `<span class="chave-situacao">Com <b>${esc(chave.comQuem)}</b> ${esc(textoDias(chave.diasFora))}${prazo}</span>${motivo}`;
 }
 
 function htmlChave(chave) {

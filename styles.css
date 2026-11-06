@@ -181,6 +181,7 @@ input[type="date"] { min-width: 0; -webkit-appearance: none; appearance: none; }
 .chave-nome { margin-top: 6px; font-size: 16px; font-weight: 700; line-height: 1.25; }
 .chave-local { margin-top: 2px; font-size: 13.5px; color: var(--suave); }
 .chave-situacao { margin-top: 6px; font-size: 13.5px; }
+.chave-motivo { margin-top: 1px; font-size: 13.5px; color: var(--suave); }
 
 .chave-lapis {
   position: absolute;

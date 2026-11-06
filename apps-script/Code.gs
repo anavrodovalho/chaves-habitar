@@ -258,9 +258,17 @@ function acaoListarChaves() {
   var ss = planilha_();
   var aba = ss.getSheetByName(ABA_CADASTRO);
   var fuso = ss.getSpreadsheetTimeZone();
+  var movimentos = ss.getSheetByName(ABA_MOVIMENTOS);
+  var motivos = movimentos.getRange(LINHA_DADOS, 8, movimentos.getLastRow() - LINHA_DADOS + 1, 1).getValues();
   return aba.getRange(LINHA_DADOS, 1, aba.getLastRow() - LINHA_DADOS + 1, 16).getValues()
     .filter(function (l) { return String(l[0]).trim(); })
-    .map(function (l) { return montarChave_(l, fuso); });
+    .map(function (l) {
+      var chave = montarChave_(l, fuso);
+      // A coluna P guarda a posição do último movimento da chave, contada a partir de 1.
+      var ultimo = motivos[Number(l[15]) - 1];
+      chave.motivo = ultimo ? String(ultimo[0]).trim() : '';
+      return chave;
+    });
 }
 
 function montarChave_(l, fuso) {
