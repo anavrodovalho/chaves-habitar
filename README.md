@@ -95,7 +95,7 @@ Faça estes testes em uma chave qualquer. No fim, os registros de teste podem se
 - [ ] **Saída bloqueada:** abra o site em outro celular antes de atualizar a tela e tente retirar a mesma chave. Aparece "já está fora".
 - [ ] **Devolução:** toque em "Registrar devolução" duas vezes. O Cadastro mostra `Disponível` e a nova linha de `Entradas e Saídas` mostra `Habitar Imóveis` na Localização. A coluna "Com quem está" do Cadastro fica vazia nesse caso, porque é assim que a fórmula funciona.
 - [ ] **Atrasada:** registre uma saída e, na planilha, mude a Devolução prevista dessa linha para ontem. A chave passa para `Atrasada` e sobe para o topo do painel.
-- [ ] **Cadastro:** na aba Admin, toque em "Cadastrar nova chave". O código sugerido é `CH-016`, e a entrada inicial aparece em `Entradas e Saídas`.
+- [ ] **Cadastro:** no Painel, toque em "Nova chave", com um login de corretor. O código sugerido é o próximo livre (`CH-016` na primeira vez), e a entrada inicial aparece em `Entradas e Saídas`.
 - [ ] **Fórmulas intactas:** confira na planilha que cada registro entrou na primeira linha vazia e que as colunas F e L (movimentos) e J:N e P (cadastro) continuam com fórmula.
 - [ ] **Duas pessoas ao mesmo tempo:** em dois celulares, registre saídas de chaves diferentes no mesmo instante. Devem surgir duas linhas, sem uma apagar a outra.
 - [ ] **Celular:** use o site pelo ícone na tela inicial.
@@ -104,6 +104,7 @@ Faça estes testes em uma chave qualquer. No fim, os registros de teste podem se
 
 - O sistema escreve só em A:E e G:K de `Entradas e Saídas` e em A:I e O de `Cadastro das Chaves`.
 - A sessão vale até 8 horas. O cache do Google guarda no máximo 6 horas por vez, então quem ficar mais de 6 horas sem usar o sistema precisa entrar de novo.
+- Toda a equipe pode cadastrar chaves. Só o perfil `admin` edita o cadastro de uma chave.
 - Cinco PINs errados bloqueiam aquele nome por 15 minutos.
 - Quando chega à última linha preparada, o sistema abre novas linhas dentro da faixa das fórmulas, para que elas continuem lendo todos os registros.
 - Se alguém escrever direto na planilha, mantenha a ordem cronológica e não deixe linhas em branco no meio.

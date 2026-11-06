@@ -47,10 +47,10 @@ var ACOES = {
   listarChaves:    { fn: acaoListarChaves },
   historico:       { fn: acaoHistorico },
   listas:          { fn: acaoListas },
-  sugerirCodigo:   { fn: acaoSugerirCodigo, admin: true },
+  sugerirCodigo:   { fn: acaoSugerirCodigo },
   registrarSaida:  { fn: acaoRegistrarSaida, escrita: true },
   registrarEntrada:{ fn: acaoRegistrarEntrada, escrita: true },
-  cadastrarChave:  { fn: acaoCadastrarChave, escrita: true, admin: true },
+  cadastrarChave:  { fn: acaoCadastrarChave, escrita: true },
   editarChave:     { fn: acaoEditarChave, escrita: true, admin: true }
 };
 
@@ -494,7 +494,7 @@ function reservarLinha_(aba, colunaChave, linhasNovas) {
   return linha;
 }
 
-// ───────────────────────────── Cadastro (admin) ─────────────────────────────
+// ─────────────── Cadastro (toda a equipe) e edição (só admin) ───────────────
 
 function acaoCadastrarChave(dados, usuario) {
   var ss = planilha_();

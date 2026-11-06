@@ -153,7 +153,9 @@ select { appearance: auto; }
 .cartao span { display: block; margin-top: 3px; font: 600 11px/1.2 var(--titulo); color: var(--texto-suave); }
 .cartao.tem-atraso b { color: var(--erro); }
 
-.busca { margin-top: 12px; }
+.busca { display: flex; gap: 8px; margin-top: 12px; }
+.busca input { flex: 1; min-width: 0; }
+.botao-nova { flex: none; width: auto; min-height: 48px; padding: 0 16px; white-space: nowrap; }
 
 .filtros {
   display: flex;
@@ -454,7 +456,7 @@ select { appearance: auto; }
 
   #vista-painel {
     display: grid;
-    grid-template-columns: minmax(300px, 440px) 1fr;
+    grid-template-columns: minmax(340px, 540px) 1fr;
     gap: 14px 16px;
     align-items: center;
   }

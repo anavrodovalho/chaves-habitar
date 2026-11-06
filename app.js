@@ -688,6 +688,7 @@ function tratarCliqueAcao(evento) {
   if (acao === 'detalhe') abrirDetalhe(codigo);
   if (acao === 'editar') abrirEdicao(codigo);
   if (acao === 'recarregar') atualizarTudo();
+  if (acao === 'nova-chave') abrirNovaChave(alvo);
   if (acao === 'devolucao') {
     pedirConfirmacao(alvo, 'Toque de novo para confirmar', () => registrarEntrada(alvo, codigo, 'Devolução'));
   }
@@ -732,7 +733,6 @@ function ligarEventos() {
     if (e.target.id === 'form-chave') enviarChave(e.target);
   });
   el('form-historico').addEventListener('change', carregarHistorico);
-  el('botao-nova-chave').addEventListener('click', (e) => abrirNovaChave(e.currentTarget));
 
   document.addEventListener('visibilitychange', () => {
     const voltou = document.visibilityState === 'visible';

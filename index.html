@@ -56,7 +56,8 @@
       <section id="vista-painel">
         <div id="cartoes" class="cartoes"></div>
         <div class="busca">
-          <input id="busca" type="search" placeholder="Código, imóvel, endereço ou bairro" aria-label="Buscar chave" autocomplete="off">
+          <input id="busca" type="search" placeholder="Buscar chave" aria-label="Buscar por código, imóvel, endereço ou bairro" autocomplete="off">
+          <button class="botao botao-principal botao-nova" type="button" data-acao="nova-chave">Nova chave</button>
         </div>
         <div id="filtros" class="filtros" role="group" aria-label="Filtrar por situação"></div>
         <div id="lista-chaves" class="lista"></div>
@@ -88,7 +89,7 @@
       </section>
 
       <section id="vista-admin" hidden>
-        <button id="botao-nova-chave" class="botao botao-principal" type="button">Cadastrar nova chave</button>
+        <button id="botao-nova-chave" class="botao botao-principal" type="button" data-acao="nova-chave">Cadastrar nova chave</button>
         <h2 class="titulo-secao">Chaves cadastradas</h2>
         <div id="lista-admin" class="lista-admin"></div>
       </section>
