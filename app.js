@@ -329,7 +329,7 @@ function htmlChave(chave) {
         <div class="chave-local">${esc(textoQuantidade(chave.quantidade))}</div>
         ${htmlSituacaoFora(chave)}
       </button>
-      <div class="chave-acao">${htmlAcao(chave)}${htmlBotaoEditar(chave)}</div>
+      <div class="chave-acao">${htmlAcao(chave)}${htmlBotaoEditar(chave)}${htmlBotaoEntregar(chave)}</div>
     </article>`;
 }
 
@@ -416,13 +416,17 @@ function abrirSaida(codigo, motivoInicial) {
     return;
   }
   const motivos = estado.listas.motivos.filter((m) => !MOTIVOS_SO_DE_ENTRADA.includes(m));
+  if (motivoInicial && !motivos.includes(motivoInicial)) motivos.push(motivoInicial);
+  const fora = estaFora(chave);
   const responsaveis = [...estado.listas.responsaveis];
   if (!responsaveis.includes(estado.sessao.nome)) responsaveis.unshift(estado.sessao.nome);
   const hoje = hojeIso();
 
-  abrirJanela(`Saída de ${chave.codigo}`, `
-    <form id="form-saida" class="formulario" data-codigo="${esc(chave.codigo)}">
+  const titulo = motivoInicial === MOTIVO_ENTREGUE ? `Entregar ${chave.codigo}` : `Saída de ${chave.codigo}`;
+  abrirJanela(titulo, `
+    <form id="form-saida" class="formulario" data-codigo="${esc(chave.codigo)}"${fora ? ' data-fora="1"' : ''}>
       <p class="ajuda" style="margin:0">${esc(chave.nome)}</p>
+      ${fora ? `<p class="ajuda" style="margin:0">Esta chave está com ${esc(chave.comQuem)}. A devolução será registrada automaticamente antes da entrega.</p>` : ''}
       <label><span id="rotulo-quem">Quem levou a chave</span>
         <input name="localizacao" list="pessoas" required maxlength="120" autocomplete="off">
         <datalist id="pessoas">${opcoes(estado.listas.responsaveis)}</datalist>
@@ -460,6 +464,15 @@ async function enviarSaida(formulario) {
   const dados = Object.fromEntries(new FormData(formulario));
   dados.codigoChave = formulario.dataset.codigo;
   await comBotao(formulario.querySelector('button[type="submit"]'), 'Registrando…', async () => {
+    if (formulario.dataset.fora) {
+      await api('registrarEntrada', {
+        codigoChave: dados.codigoChave,
+        motivo: 'Devolução',
+        observacao: 'Registrada automaticamente na entrega ao comprador',
+      });
+      // Se a entrega falhar, um novo envio não pode tentar devolver de novo.
+      delete formulario.dataset.fora;
+    }
     await api('registrarSaida', dados);
     fecharJanela();
     avisar(dados.motivo === MOTIVO_ENTREGUE
@@ -512,9 +525,13 @@ function htmlMovimentoLinhaTempo(m) {
     </li>`;
 }
 
+function estaFora(chave) {
+  return chave.situacao === 'Retirada' || chave.situacao === 'Atrasada';
+}
+
 function htmlBotaoEntregar(chave) {
-  if (chave.situacao !== 'Disponível' || !estado.listas.motivos.includes(MOTIVO_ENTREGUE)) return '';
-  return `<button class="botao botao-claro" type="button" data-acao="entregar" data-codigo="${esc(chave.codigo)}">Entregar ao comprador</button>`;
+  if (chave.situacao !== 'Disponível' && !estaFora(chave)) return '';
+  return `<button class="botao botao-claro botao-entregar" type="button" data-acao="entregar" data-codigo="${esc(chave.codigo)}">Entregar ao comprador</button>`;
 }
 
 async function abrirDetalhe(codigo) {
@@ -581,7 +598,7 @@ function renderizarEntregues() {
   } else if (todas.length) {
     destino.innerHTML = '<div class="vazio">Nenhuma chave entregue com essa busca.</div>';
   } else {
-    destino.innerHTML = '<div class="vazio">Nenhuma chave entregue ainda. Para finalizar uma chave, toque nela no Painel e escolha "Entregar ao comprador".</div>';
+    destino.innerHTML = '<div class="vazio">Nenhuma chave entregue ainda. Para finalizar uma chave, toque em "Entregar ao comprador" no card dela, no Painel.</div>';
   }
 }
 
@@ -840,9 +857,7 @@ function ligarEventos() {
     const voltou = document.visibilityState === 'visible';
     const passouTempo = Date.now() - estado.ultimaAtualizacao > INTERVALO_MINIMO_ATUALIZACAO_MS;
     if (voltou && estado.sessao && passouTempo) {
-      atualizarChaves().catch((erro) => {
-        if (erro.codigo !== 'SESSAO') avisar(erro.message, 'erro');
-      });
+      atualizarTudo();
       if (estado.vista === 'historico') carregarHistorico();
     }
   });

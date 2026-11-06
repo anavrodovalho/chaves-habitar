@@ -205,9 +205,10 @@ select { appearance: auto; }
 .chave-local { margin-top: 2px; font-size: 13px; color: var(--texto-suave); }
 .chave-detalhe { margin-top: 6px; font-size: 13px; color: var(--texto); }
 .chave-detalhe strong { font-weight: 600; }
-.chave-acao { display: flex; gap: 8px; padding: 0 14px 14px; }
+.chave-acao { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 14px; }
 .chave-acao .botao { flex: 1; width: auto; min-width: 0; }
 .chave-acao .botao-editar { flex: none; padding: 0 16px; }
+.chave-acao .botao-entregar { flex: 0 0 100%; min-height: 46px; }
 
 .selo {
   flex: none;

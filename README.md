@@ -106,7 +106,7 @@ Faça estes testes em uma chave qualquer. No fim, os registros de teste podem se
 - A sessão vale até 8 horas. O cache do Google guarda no máximo 6 horas por vez, então quem ficar mais de 6 horas sem usar o sistema precisa entrar de novo.
 - Toda a equipe pode cadastrar e editar chaves. Só o perfil `admin` exclui uma chave.
 - Excluir apaga o cadastro e todos os movimentos da chave, e só funciona com a chave na imobiliária ou devolvida ao proprietário. Uma cópia fica na aba `Chaves excluidas`.
-- Chave vendida: toque nela no Painel e escolha "Entregar ao comprador". Ela sai do Painel e vai para a seção Entregues, com o histórico preservado. Se a venda não se concretizar, use "Registrar nova entrada".
+- Chave vendida: toque em "Entregar ao comprador" no card da chave. Se ela estiver com alguém, a devolução é registrada automaticamente antes da entrega. A chave sai do Painel e vai para a seção Entregues, com o histórico preservado. Se a venda não se concretizar, use "Registrar nova entrada".
 - A situação "Entregue ao comprador" precisa ser ativada uma vez, em **Chaves Habitar → 3. Ativar chaves entregues**.
 - Para um imóvel que saiu da carteira, prefira registrar uma saída com o motivo `Devolvida ao proprietário`. O histórico continua no sistema.
 - Cinco PINs errados bloqueiam aquele nome por 15 minutos.
