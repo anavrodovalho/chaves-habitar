@@ -109,7 +109,7 @@ Faça estes testes em uma chave qualquer. No fim, os registros de teste podem se
 - Chave vendida: toque em "Entregar" no card da chave. Se ela estiver com alguém, a devolução é registrada automaticamente antes da entrega. A chave vai para a aba Entregues, com o histórico preservado. Se a venda for desfeita, abra a chave em Entregues e use "Registrar nova entrada".
 - Para um imóvel que saiu da carteira, prefira registrar uma saída com o motivo `Devolvida ao proprietário`. O histórico continua no sistema.
 - O Histórico do site mostra os 500 movimentos mais recentes. O registro completo fica na aba `Entradas e Saídas`.
-- A fonte é a Helvetica Now Display, usada apenas em aparelhos que a têm instalada; nos demais aparecem Helvetica Neue ou Arial. O arquivo da fonte não entra neste repositório público, porque a licença da Monotype proíbe distribuí-lo sem uma licença web.
+- A fonte é a Inter, gratuita (licença SIL Open Font), carregada do Google Fonts.
 - Cinco PINs errados bloqueiam aquele nome por 15 minutos.
 - Quando chega à última linha preparada, o sistema abre novas linhas dentro da faixa das fórmulas, para que elas continuem lendo todos os registros.
 - Se alguém escrever direto na planilha, mantenha a ordem cronológica e não deixe linhas em branco no meio.

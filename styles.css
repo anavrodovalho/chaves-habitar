@@ -10,7 +10,7 @@
   --erro: #C92A1E;
   --raio: 14px;
   /* Só existem dois pesos: 400 e 700. */
-  --fonte: 'Helvetica Now Display', 'Helvetica Now', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  --fonte: 'Inter', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
 }
 
 /* Cada situação tem uma cor: a pílula, o selo e o histórico usam a mesma. */
@@ -31,7 +31,6 @@ body {
   background: var(--fundo);
   color: var(--texto);
   font: 400 15px/1.45 var(--fonte);
-  letter-spacing: .005em;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -166,7 +165,9 @@ input[type="date"] { min-width: 0; -webkit-appearance: none; appearance: none; }
 }
 .chave-info {
   flex: 1;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   width: 100%;
   padding: 13px 14px 12px;
   background: none;
