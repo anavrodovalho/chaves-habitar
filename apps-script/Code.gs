@@ -29,9 +29,11 @@ var LOCAL_IMOBILIARIA = 'Habitar Imóveis';
 var MOTIVO_ENTRADA = 'Entrada';
 var MOTIVO_DEVOLUCAO = 'Devolução';
 var MOTIVO_DEVOLVIDA = 'Devolvida ao proprietário';
+var MOTIVO_ENTREGUE = 'Entregue ao comprador';
 
 var SITUACAO_DISPONIVEL = 'Disponível';
 var SITUACAO_DEVOLVIDA = 'Devolvida ao proprietário';
+var SITUACAO_ENTREGUE = 'Entregue ao comprador';
 
 var SESSAO_HORAS = 8;
 var CACHE_MAX_SEGUNDOS = 21600;   // limite do CacheService: 6 horas por gravação
@@ -373,6 +375,9 @@ function acaoRegistrarSaida(dados, usuario) {
   if (situacao === SITUACAO_DEVOLVIDA) {
     falha_(chave.dados.codigo + ' foi devolvida ao proprietário. Registre uma entrada antes de retirar.');
   }
+  if (situacao === SITUACAO_ENTREGUE) {
+    falha_(chave.dados.codigo + ' foi entregue ao comprador. Registre uma entrada antes de retirar.');
+  }
   if (situacao !== SITUACAO_DISPONIVEL) {
     falha_(chave.dados.codigo + ' já está fora, com ' + (chave.dados.comQuem || 'outra pessoa') +
       (chave.dados.retiradaEm ? ' desde ' + chave.dados.retiradaEm : '') + '.');
@@ -390,7 +395,7 @@ function acaoRegistrarSaida(dados, usuario) {
 
   var agora = agora_();
   var devolucao = '';
-  if (dados.devolucaoPrevista && motivo !== MOTIVO_DEVOLVIDA) {
+  if (dados.devolucaoPrevista && motivo !== MOTIVO_DEVOLVIDA && motivo !== MOTIVO_ENTREGUE) {
     var iso = validarIso_(dados.devolucaoPrevista);
     if (iso < agora.iso) falha_('A devolução prevista não pode ser anterior a hoje.');
     devolucao = dataBrasilia_(iso);
@@ -559,7 +564,7 @@ function acaoExcluirChave(dados, usuario) {
   var chave = chaveExistente_(ss, cadastro, dados.codigo);
   var situacao = chave.dados.situacao;
 
-  if (situacao !== SITUACAO_DISPONIVEL && situacao !== SITUACAO_DEVOLVIDA) {
+  if ([SITUACAO_DISPONIVEL, SITUACAO_DEVOLVIDA, SITUACAO_ENTREGUE].indexOf(situacao) < 0) {
     falha_(chave.dados.codigo + ' está com ' + (chave.dados.comQuem || 'outra pessoa') +
       '. Registre a devolução antes de excluir.');
   }
@@ -708,6 +713,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('Chaves Habitar')
     .addItem('1. Configurar sistema', 'menuConfigurar')
     .addItem('2. Cadastrar pessoa ou trocar PIN', 'menuDefinirPin')
+    .addItem('3. Ativar chaves entregues', 'menuAtivarEntregues')
     .addToUi();
 }
 
@@ -772,6 +778,78 @@ function criarAbaUsuarios_(ss) {
     SpreadsheetApp.newDataValidation().requireValueInList(['admin', 'corretor'], true).build());
   aba.getRange(2, 4, 50, 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(['Sim', 'Não'], true).build());
+}
+
+function menuAtivarEntregues() {
+  SpreadsheetApp.getUi().alert(ativarEntregues().join('\n'));
+}
+
+/**
+ * Roda uma vez. Cria a situação "Entregue ao comprador": acrescenta uma condição à
+ * fórmula da coluna Situação, o motivo na aba Listas e uma linha na aba Resumo.
+ * É a única função que escreve na coluna J, e só depois de conferir todas as linhas.
+ * Pode ser rodada de novo sem efeito.
+ */
+function ativarEntregues() {
+  return comTrava_(function () {
+    var ss = planilha_();
+    var relatorio = [
+      atualizarFormulaSituacao_(ss),
+      incluirMotivoEntregue_(ss),
+      incluirLinhaResumo_(ss)
+    ];
+    SpreadsheetApp.flush();
+    console.log(relatorio.join('\n'));
+    return relatorio;
+  });
+}
+
+function atualizarFormulaSituacao_(ss) {
+  var aba = ss.getSheetByName(ABA_CADASTRO);
+  var intervalo = aba.getRange(LINHA_DADOS, 10, aba.getLastRow() - LINHA_DADOS + 1, 1);
+  var padrao = /IF\(INDEX\('Entradas e Saídas'!\$H\$4:\$H\$\d+,P\d+\)="Devolvida ao proprietário","Devolvida ao proprietário",/;
+  var alteradas = 0;
+
+  // Monta todas as fórmulas antes de gravar: se uma linha for diferente do esperado,
+  // nada é alterado.
+  var novas = intervalo.getFormulas().map(function (linha, i) {
+    var formula = linha[0];
+    if (formula.indexOf(SITUACAO_ENTREGUE) >= 0) return [formula];
+    var achado = padrao.exec(formula);
+    if (!achado) {
+      falha_('A fórmula da linha ' + (i + LINHA_DADOS) + ' da coluna Situação é diferente do esperado. Nada foi alterado.');
+    }
+    alteradas++;
+    var condicao = achado[0].slice(0, achado[0].indexOf('="')) +
+      '="' + SITUACAO_ENTREGUE + '","' + SITUACAO_ENTREGUE + '",';
+    return [formula.slice(0, achado.index) + condicao + formula.slice(achado.index) + ')'];
+  });
+
+  if (!alteradas) return 'Coluna Situação: já estava atualizada';
+  intervalo.setFormulas(novas);
+  return 'Coluna Situação: fórmula atualizada em ' + alteradas + ' linhas';
+}
+
+function incluirMotivoEntregue_(ss) {
+  var aba = ss.getSheetByName(ABA_LISTAS);
+  var motivos = aba.getRange(2, 1, 14, 1).getValues().map(function (l) { return String(l[0]).trim(); });
+  if (motivos.indexOf(MOTIVO_ENTREGUE) >= 0) return 'Aba Listas: o motivo já existia';
+  var vazia = motivos.indexOf('');
+  if (vazia < 0) falha_('A lista de motivos está cheia. Libere uma linha na aba Listas e rode de novo.');
+  aba.getRange(vazia + 2, 1).setValue(MOTIVO_ENTREGUE);
+  return 'Aba Listas: motivo "' + MOTIVO_ENTREGUE + '" incluído';
+}
+
+function incluirLinhaResumo_(ss) {
+  var aba = ss.getSheetByName('Resumo');
+  var linha = 10; // linha livre logo abaixo de "Devolvidas ao proprietário"
+  if (String(aba.getRange(linha, 1).getValues()[0][0]).trim()) return 'Aba Resumo: não foi alterada';
+  var ultima = ss.getSheetByName(ABA_CADASTRO).getLastRow();
+  aba.getRange(linha - 1, 1, 1, 2).copyTo(aba.getRange(linha, 1, 1, 2), { formatOnly: true });
+  aba.getRange(linha, 1).setValue('Entregues ao comprador');
+  aba.getRange(linha, 2).setFormula(
+    "=COUNTIF('" + ABA_CADASTRO + "'!$J$" + LINHA_DADOS + ':$J$' + ultima + ',"' + SITUACAO_ENTREGUE + '")');
+  return 'Aba Resumo: linha "Entregues ao comprador" incluída';
 }
 
 /** Pelo menu: o PIN é digitado na hora e nunca fica escrito no código. */

@@ -156,6 +156,7 @@ select { appearance: auto; }
 .cartao.tem-atraso b { color: var(--erro); }
 
 .busca { display: flex; gap: 8px; margin-top: 12px; }
+#vista-entregues .busca { margin-top: 0; }
 .busca input { flex: 1; min-width: 0; }
 .botao-nova { flex: none; width: auto; min-height: 48px; padding: 0 16px; white-space: nowrap; }
 
@@ -219,6 +220,7 @@ select { appearance: auto; }
 .selo-retirada { color: #7A5C00; background: #FFF3CD; }
 .selo-atrasada { color: #FFFFFF; background: #B42318; }
 .selo-devolvida { color: #FFFFFF; background: #3D3D3D; }
+.selo-entregue { color: #FFFFFF; background: var(--marinho); }
 
 .vazio { padding: 28px 12px; text-align: center; color: var(--texto-suave); }
 .vazio .botao { max-width: 220px; margin: 12px auto 0; }
@@ -407,7 +409,7 @@ select { appearance: auto; }
 @media (min-width: 680px) {
   .conteudo { max-width: none; padding-left: 24px; padding-right: 24px; }
 
-  #lista-chaves {
+  #lista-chaves, #lista-entregues {
     grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
     gap: 14px;
   }
@@ -470,6 +472,7 @@ select { appearance: auto; }
   .cartao b { font-size: 30px; }
   .cartao span { font-size: 13px; }
   .busca, .filtros, #lista-chaves { margin: 0; }
+  .busca-entregues { max-width: 540px; }
   .filtros { padding: 0; flex-wrap: wrap; overflow: visible; }
 
   .avisos { bottom: 24px; }

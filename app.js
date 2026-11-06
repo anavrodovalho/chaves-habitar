@@ -6,13 +6,16 @@ const INTERVALO_MINIMO_ATUALIZACAO_MS = 5000;
 const TEMPO_CONFIRMACAO_MS = 4000;
 const MOTIVOS_SO_DE_ENTRADA = ['Entrada', 'Devolução'];
 const MOTIVO_DEVOLVIDA = 'Devolvida ao proprietário';
+const MOTIVO_ENTREGUE = 'Entregue ao comprador';
+const SITUACAO_ENTREGUE = 'Entregue ao comprador';
 
-const ORDEM_SITUACAO = { 'Atrasada': 0, 'Retirada': 1, 'Disponível': 2, 'Devolvida ao proprietário': 3 };
+const ORDEM_SITUACAO = { 'Atrasada': 0, 'Retirada': 1, 'Disponível': 2, 'Devolvida ao proprietário': 3, 'Entregue ao comprador': 4 };
 const CLASSE_SELO = {
   'Disponível': 'selo-disponivel',
   'Retirada': 'selo-retirada',
   'Atrasada': 'selo-atrasada',
   'Devolvida ao proprietário': 'selo-devolvida',
+  'Entregue ao comprador': 'selo-entregue',
 };
 const FILTROS = [
   { valor: '', rotulo: 'Todas' },
@@ -21,7 +24,7 @@ const FILTROS = [
   { valor: 'Atrasada', rotulo: 'Atrasadas' },
   { valor: 'Devolvida ao proprietário', rotulo: 'Devolvidas' },
 ];
-const TITULOS_VISTA = { painel: 'Chaves', historico: 'Histórico', admin: 'Administração' };
+const TITULOS_VISTA = { painel: 'Chaves', entregues: 'Entregues', historico: 'Histórico', admin: 'Administração' };
 
 const estado = {
   sessao: null,
@@ -30,6 +33,7 @@ const estado = {
   carregou: false,
   vista: 'painel',
   busca: '',
+  buscaEntregues: '',
   filtro: '',
   ultimaAtualizacao: 0,
   atualizando: false,
@@ -222,6 +226,7 @@ async function atualizarChaves() {
     estado.carregou = true;
     estado.ultimaAtualizacao = Date.now();
     renderizarPainel();
+    renderizarEntregues();
     renderizarAdmin();
     preencherFiltrosHistorico();
   } finally {
@@ -244,9 +249,13 @@ async function atualizarTudo() {
 
 // ───────────────────────────── Painel ─────────────────────────────
 
+function chavesAtivas() {
+  return estado.chaves.filter((c) => c.situacao !== SITUACAO_ENTREGUE);
+}
+
 function chavesFiltradas() {
   const termo = semAcento(estado.busca).trim();
-  return estado.chaves
+  return chavesAtivas()
     .filter((c) => !estado.filtro || c.situacao === estado.filtro)
     .filter((c) => !termo || semAcento(
       [c.codigo, c.codigoImovel, c.nome, c.endereco, c.bairro].join(' ')
@@ -280,7 +289,7 @@ function htmlAcao(chave) {
   if (chave.situacao === 'Retirada' || chave.situacao === 'Atrasada') {
     return `<button class="botao botao-devolucao" type="button" data-acao="devolucao" data-codigo="${c}">Registrar devolução</button>`;
   }
-  if (chave.situacao === 'Devolvida ao proprietário') {
+  if (chave.situacao === 'Devolvida ao proprietário' || chave.situacao === SITUACAO_ENTREGUE) {
     return `<button class="botao botao-claro" type="button" data-acao="reentrada" data-codigo="${c}">Registrar nova entrada</button>`;
   }
   return '';
@@ -295,6 +304,9 @@ function htmlBotaoEditar(chave) {
 }
 
 function htmlSituacaoFora(chave) {
+  if (chave.situacao === SITUACAO_ENTREGUE) {
+    return `<p class="chave-detalhe">Entregue a <strong>${esc(chave.comQuem)}</strong> em ${esc(chave.retiradaEm)}</p>`;
+  }
   if (chave.situacao === 'Devolvida ao proprietário') {
     return `<p class="chave-detalhe">Devolvida em ${esc(chave.retiradaEm)}</p>`;
   }
@@ -331,7 +343,7 @@ function renderizarCartoes() {
     { filtro: 'Disponível', rotulo: 'Disponíveis', valor: contagem('Disponível') },
     { filtro: 'Retirada', rotulo: 'Retiradas', valor: contagem('Retirada') },
     { filtro: 'Atrasada', rotulo: 'Atrasadas', valor: atrasadas, classe: atrasadas ? ' tem-atraso' : '' },
-    { filtro: '', rotulo: 'Total', valor: estado.chaves.length },
+    { filtro: '', rotulo: 'Total', valor: chavesAtivas().length },
   ];
   el('cartoes').innerHTML = cartoes.map((c) => `
     <button class="cartao${c.classe || ''}" type="button" data-filtro="${esc(c.filtro)}" aria-pressed="${estado.filtro === c.filtro}">
@@ -395,7 +407,7 @@ function fecharJanela() {
   document.body.appendChild(el('avisos'));
 }
 
-function abrirSaida(codigo) {
+function abrirSaida(codigo, motivoInicial) {
   const chave = buscarChave(codigo);
   if (!chave) return;
   if (!estado.listas.motivos.length) {
@@ -411,7 +423,7 @@ function abrirSaida(codigo) {
   abrirJanela(`Saída de ${chave.codigo}`, `
     <form id="form-saida" class="formulario" data-codigo="${esc(chave.codigo)}">
       <p class="ajuda" style="margin:0">${esc(chave.nome)}</p>
-      <label>Quem levou a chave
+      <label><span id="rotulo-quem">Quem levou a chave</span>
         <input name="localizacao" list="pessoas" required maxlength="120" autocomplete="off">
         <datalist id="pessoas">${opcoes(estado.listas.responsaveis)}</datalist>
       </label>
@@ -421,7 +433,7 @@ function abrirSaida(codigo) {
       <label>Motivo
         <select name="motivo" required>
           <option value="">Escolha o motivo</option>
-          ${opcoes(motivos)}
+          ${opcoes(motivos, motivoInicial)}
         </select>
       </label>
       <label>Responsável
@@ -435,7 +447,13 @@ function abrirSaida(codigo) {
       </label>
       <button class="botao botao-principal" type="submit">Confirmar saída</button>
     </form>`);
+  ajustarCamposMotivo(motivoInicial);
   el('janela-corpo').querySelector('[name="localizacao"]').focus();
+}
+
+function ajustarCamposMotivo(motivo) {
+  el('campo-devolucao').hidden = motivo === MOTIVO_DEVOLVIDA || motivo === MOTIVO_ENTREGUE;
+  el('rotulo-quem').textContent = motivo === MOTIVO_ENTREGUE ? 'Comprador' : 'Quem levou a chave';
 }
 
 async function enviarSaida(formulario) {
@@ -444,7 +462,9 @@ async function enviarSaida(formulario) {
   await comBotao(formulario.querySelector('button[type="submit"]'), 'Registrando…', async () => {
     await api('registrarSaida', dados);
     fecharJanela();
-    avisar(`Saída de ${dados.codigoChave} registrada.`, 'sucesso');
+    avisar(dados.motivo === MOTIVO_ENTREGUE
+      ? `${dados.codigoChave} entregue ao comprador.`
+      : `Saída de ${dados.codigoChave} registrada.`, 'sucesso');
     await atualizarChaves();
   });
 }
@@ -492,6 +512,11 @@ function htmlMovimentoLinhaTempo(m) {
     </li>`;
 }
 
+function htmlBotaoEntregar(chave) {
+  if (chave.situacao !== 'Disponível' || !estado.listas.motivos.includes(MOTIVO_ENTREGUE)) return '';
+  return `<button class="botao botao-claro" type="button" data-acao="entregar" data-codigo="${esc(chave.codigo)}">Entregar ao comprador</button>`;
+}
+
 async function abrirDetalhe(codigo) {
   const chave = buscarChave(codigo);
   if (!chave) return;
@@ -511,7 +536,7 @@ async function abrirDetalhe(codigo) {
       <dt>Chaveiro</dt><dd>${esc(textoQuantidade(chave.quantidade))}</dd>
       ${chave.observacao ? `<dt>Observação</dt><dd>${esc(chave.observacao)}</dd>` : ''}
     </dl>
-    <div class="detalhe-acoes">${htmlAcao(chave)}${editar}</div>
+    <div class="detalhe-acoes">${htmlAcao(chave)}${htmlBotaoEntregar(chave)}${editar}</div>
     <h3 style="font-size:15px;color:var(--verde)">Linha do tempo</h3>
     <div id="linha-tempo"><p class="vazio">Carregando…</p></div>`);
 
@@ -525,6 +550,38 @@ async function abrirDetalhe(codigo) {
   } catch (erro) {
     const destino = el('linha-tempo');
     if (destino) destino.innerHTML = `<p class="vazio">${esc(erro.message)}</p>`;
+  }
+}
+
+// ───────────────────────────── Entregues ─────────────────────────────
+
+function dataParaOrdenar(data) {
+  return String(data || '').split('/').reverse().join('');
+}
+
+function renderizarEntregues() {
+  const destino = el('lista-entregues');
+  if (!estado.carregou) {
+    destino.innerHTML = '<div class="esqueleto"></div>'.repeat(3);
+    return;
+  }
+  const termo = semAcento(estado.buscaEntregues).trim();
+  const todas = estado.chaves.filter((c) => c.situacao === SITUACAO_ENTREGUE);
+  const chaves = todas
+    .filter((c) => !termo || semAcento(
+      [c.codigo, c.codigoImovel, c.nome, c.endereco, c.bairro, c.comQuem].join(' ')
+    ).includes(termo))
+    .sort((a, b) => dataParaOrdenar(b.retiradaEm).localeCompare(dataParaOrdenar(a.retiradaEm)));
+
+  document.querySelector('.aba[data-vista="entregues"]').textContent =
+    todas.length ? `Entregues (${todas.length})` : 'Entregues';
+
+  if (chaves.length) {
+    destino.innerHTML = chaves.map(htmlChave).join('');
+  } else if (todas.length) {
+    destino.innerHTML = '<div class="vazio">Nenhuma chave entregue com essa busca.</div>';
+  } else {
+    destino.innerHTML = '<div class="vazio">Nenhuma chave entregue ainda. Para finalizar uma chave, toque nela no Painel e escolha "Entregar ao comprador".</div>';
   }
 }
 
@@ -708,7 +765,7 @@ async function enviarChave(formulario) {
 
 function irPara(vista) {
   estado.vista = vista;
-  ['painel', 'historico', 'admin'].forEach((nome) => { el(`vista-${nome}`).hidden = nome !== vista; });
+  ['painel', 'entregues', 'historico', 'admin'].forEach((nome) => { el(`vista-${nome}`).hidden = nome !== vista; });
   document.querySelectorAll('.aba').forEach((aba) => {
     if (aba.dataset.vista === vista) aba.setAttribute('aria-current', 'page');
     else aba.removeAttribute('aria-current');
@@ -723,6 +780,7 @@ function tratarCliqueAcao(evento) {
   if (!alvo) return;
   const { acao, codigo } = alvo.dataset;
   if (acao === 'saida') abrirSaida(codigo);
+  if (acao === 'entregar') abrirSaida(codigo, MOTIVO_ENTREGUE);
   if (acao === 'detalhe') abrirDetalhe(codigo);
   if (acao === 'editar') abrirEdicao(codigo);
   if (acao === 'excluir') abrirExclusao(codigo);
@@ -751,6 +809,10 @@ function ligarEventos() {
     estado.busca = e.target.value;
     renderizarPainel();
   });
+  el('busca-entregues').addEventListener('input', (e) => {
+    estado.buscaEntregues = e.target.value;
+    renderizarEntregues();
+  });
   document.querySelector('.abas').addEventListener('click', (e) => {
     const aba = e.target.closest('.aba');
     if (aba) irPara(aba.dataset.vista);
@@ -764,7 +826,7 @@ function ligarEventos() {
   el('janela-fechar').addEventListener('click', fecharJanela);
   el('janela').addEventListener('change', (e) => {
     if (e.target.name === 'motivo') {
-      el('campo-devolucao').hidden = e.target.value === MOTIVO_DEVOLVIDA;
+      ajustarCamposMotivo(e.target.value);
     }
   });
   el('janela').addEventListener('submit', (e) => {

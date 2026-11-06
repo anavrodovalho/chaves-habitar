@@ -46,6 +46,7 @@
       </div>
       <nav class="abas" aria-label="Seções">
         <button class="aba" data-vista="painel" type="button">Painel</button>
+        <button class="aba" data-vista="entregues" type="button">Entregues</button>
         <button class="aba" data-vista="historico" type="button">Histórico</button>
         <button class="aba" data-vista="admin" type="button" hidden>Admin</button>
       </nav>
@@ -61,6 +62,13 @@
         </div>
         <div id="filtros" class="filtros" role="group" aria-label="Filtrar por situação"></div>
         <div id="lista-chaves" class="lista"></div>
+      </section>
+
+      <section id="vista-entregues" hidden>
+        <div class="busca busca-entregues">
+          <input id="busca-entregues" type="search" placeholder="Buscar chave ou comprador" aria-label="Buscar por código, imóvel, endereço, bairro ou comprador" autocomplete="off">
+        </div>
+        <div id="lista-entregues" class="lista"></div>
       </section>
 
       <section id="vista-historico" hidden>
