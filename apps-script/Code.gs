@@ -294,10 +294,6 @@ function acaoHistorico(dados) {
   var exibidos = aba.getRange(LINHA_DADOS, 2, total, 1).getDisplayValues();
 
   var chave = normalizarCodigo_(dados.chave);
-  var tipo = texto_(dados.tipo, 10);
-  var responsavel = normalizar_(dados.responsavel);
-  var inicio = texto_(dados.inicio, 10);
-  var fim = texto_(dados.fim, 10);
   var limite = Math.min(Number(dados.limite) || 500, 2000);
 
   var movimentos = [];
@@ -305,12 +301,7 @@ function acaoHistorico(dados) {
     var l = valores[i];
     var codigo = String(l[4]).trim();
     if (!codigo) continue;
-    var dataIso = formatarData_(l[0], fuso, 'yyyy-MM-dd');
     if (chave && codigo.toUpperCase() !== chave) continue;
-    if (tipo && String(l[2]).trim() !== tipo) continue;
-    if (responsavel && normalizar_(l[8]) !== responsavel) continue;
-    if (inicio && dataIso < inicio) continue;
-    if (fim && dataIso > fim) continue;
     movimentos.push({
       data: formatarData_(l[0], fuso, 'dd/MM/yyyy'),
       hora: ajustarHora_(exibidos[i][0]),
@@ -713,7 +704,6 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('Chaves Habitar')
     .addItem('1. Configurar sistema', 'menuConfigurar')
     .addItem('2. Cadastrar pessoa ou trocar PIN', 'menuDefinirPin')
-    .addItem('3. Ativar chaves entregues', 'menuAtivarEntregues')
     .addToUi();
 }
 
@@ -722,8 +712,8 @@ function menuConfigurar() {
 }
 
 /**
- * Roda uma vez. Cria a aba Usuarios se ela não existir e acerta fuso, idioma e o
- * formato de exibição das datas. Não altera o conteúdo de nenhuma célula existente.
+ * Pode rodar mais de uma vez. Cria a aba Usuarios se ela não existir, acerta fuso,
+ * idioma e formato das datas e prepara a situação "Entregue ao comprador".
  */
 function configurarSistema() {
   var ss = planilha_();
@@ -762,6 +752,7 @@ function configurarSistema() {
     relatorio.push('Aba Usuarios: criada, com Ana Laura como admin (falta definir o PIN)');
   }
 
+  relatorio = relatorio.concat(ativarEntregues());
   console.log(relatorio.join('\n'));
   return relatorio;
 }
@@ -780,15 +771,11 @@ function criarAbaUsuarios_(ss) {
     SpreadsheetApp.newDataValidation().requireValueInList(['Sim', 'Não'], true).build());
 }
 
-function menuAtivarEntregues() {
-  SpreadsheetApp.getUi().alert(ativarEntregues().join('\n'));
-}
-
 /**
- * Roda uma vez. Cria a situação "Entregue ao comprador": acrescenta uma condição à
- * fórmula da coluna Situação, o motivo na aba Listas e uma linha na aba Resumo.
- * É a única função que escreve na coluna J, e só depois de conferir todas as linhas.
- * Pode ser rodada de novo sem efeito.
+ * Cria a situação "Entregue ao comprador": acrescenta uma condição à fórmula da
+ * coluna Situação, o motivo na aba Listas e uma linha na aba Resumo. É a única função
+ * que escreve na coluna J, e só depois de conferir todas as linhas. Rodar de novo não
+ * muda nada.
  */
 function ativarEntregues() {
   return comTrava_(function () {
@@ -886,13 +873,4 @@ function menuDefinirPin() {
     aba.appendRow([nome, gerarHash_(pin), 'corretor', 'Sim']);
     ui.alert(nome + ' cadastrado(a) como corretor, com acesso ativo.');
   }
-}
-
-/**
- * Alternativa pelo editor: troque 1234 pelo PIN, clique em Executar, copie o hash do
- * registro de execução para a coluna PIN (hash) e volte este valor para 1234.
- */
-function gerarHashDoPin() {
-  var pin = '1234';
-  console.log(gerarHash_(pin));
 }

@@ -13,17 +13,13 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="assets/favicon-64.png">
   <link rel="apple-touch-icon" href="assets/icone-180.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital@1&family=Raleway:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <main id="tela-login" class="login" hidden>
     <form id="form-login" class="login-caixa">
       <img class="login-logo" src="assets/logo.png" alt="Habitar Imóveis">
       <h1>Controle de chaves</h1>
-      <p class="login-frase">Quem pegou, para onde foi e quando volta.</p>
       <label>Seu nome
         <select id="login-nome" required>
           <option value="">Carregando…</option>
@@ -32,7 +28,7 @@
       <label>PIN
         <input id="login-pin" type="password" inputmode="numeric" pattern="[0-9]*" minlength="4" maxlength="6" autocomplete="current-password" required>
       </label>
-      <button class="botao botao-principal" type="submit">Entrar</button>
+      <button class="botao botao-login" type="submit">Entrar</button>
       <p id="login-aviso" class="login-aviso" hidden></p>
     </form>
   </main>
@@ -40,66 +36,37 @@
   <div id="tela-app" hidden>
     <header class="topo">
       <img class="topo-logo" src="assets/logo.png" alt="Habitar Imóveis">
-      <div class="topo-texto">
-        <strong id="topo-titulo">Chaves</strong>
-        <span id="topo-usuario"></span>
-      </div>
       <nav class="abas" aria-label="Seções">
-        <button class="aba" data-vista="painel" type="button">Painel</button>
+        <button class="aba" data-vista="chaves" type="button">Chaves</button>
         <button class="aba" data-vista="entregues" type="button">Entregues</button>
         <button class="aba" data-vista="historico" type="button">Histórico</button>
-        <button class="aba" data-vista="admin" type="button" hidden>Admin</button>
       </nav>
-      <button id="botao-sair" class="topo-sair" type="button">Sair</button>
+      <div class="topo-conta">
+        <span id="topo-usuario"></span>
+        <button id="botao-sair" type="button">Sair</button>
+      </div>
     </header>
 
     <main class="conteudo">
-      <section id="vista-painel">
-        <div id="cartoes" class="cartoes"></div>
-        <div class="busca">
-          <input id="busca" type="search" placeholder="Buscar chave" aria-label="Buscar por código, imóvel, endereço ou bairro" autocomplete="off">
-          <button class="botao botao-principal botao-nova" type="button" data-acao="nova-chave">Nova chave</button>
+      <section id="vista-chaves">
+        <div class="barra">
+          <div class="busca">
+            <input id="busca" type="search" placeholder="Buscar chave" aria-label="Buscar por código, imóvel, endereço, bairro ou pessoa" autocomplete="off">
+            <button id="botao-nova" class="botao botao-principal" type="button" data-acao="nova-chave">Nova chave</button>
+          </div>
+          <div id="filtros" class="filtros" role="group" aria-label="Filtrar por situação"></div>
         </div>
-        <div id="filtros" class="filtros" role="group" aria-label="Filtrar por situação"></div>
         <div id="lista-chaves" class="lista"></div>
       </section>
 
-      <section id="vista-entregues" hidden>
-        <div class="busca busca-entregues">
-          <input id="busca-entregues" type="search" placeholder="Buscar chave ou comprador" aria-label="Buscar por código, imóvel, endereço, bairro ou comprador" autocomplete="off">
-        </div>
-        <div id="lista-entregues" class="lista"></div>
-      </section>
-
       <section id="vista-historico" hidden>
-        <form id="form-historico" class="filtro-historico">
-          <label>Chave
-            <select id="hist-chave"><option value="">Todas</option></select>
-          </label>
-          <label>Tipo
-            <select id="hist-tipo">
-              <option value="">Todos</option>
-              <option>Saída</option>
-              <option>Entrada</option>
-            </select>
-          </label>
-          <label class="largo">Responsável
-            <select id="hist-responsavel"><option value="">Todos</option></select>
-          </label>
-          <label>De
-            <input id="hist-inicio" type="date">
-          </label>
-          <label>Até
-            <input id="hist-fim" type="date">
-          </label>
-        </form>
+        <div class="barra">
+          <div class="busca">
+            <input id="busca-historico" type="search" placeholder="Buscar no histórico" aria-label="Buscar por chave, imóvel, pessoa, motivo ou data" autocomplete="off">
+          </div>
+          <div id="filtros-historico" class="filtros" role="group" aria-label="Filtrar por tipo"></div>
+        </div>
         <div id="lista-historico" class="lista"></div>
-      </section>
-
-      <section id="vista-admin" hidden>
-        <button id="botao-nova-chave" class="botao botao-principal" type="button" data-acao="nova-chave">Cadastrar nova chave</button>
-        <h2 class="titulo-secao">Chaves cadastradas</h2>
-        <div id="lista-admin" class="lista-admin"></div>
       </section>
     </main>
   </div>
@@ -114,7 +81,7 @@
 
   <div id="avisos" class="avisos" role="status" aria-live="polite"></div>
 
-  <script src="config.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="config.js?v=7"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

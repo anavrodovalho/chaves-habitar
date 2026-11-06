@@ -29,7 +29,7 @@ O repositório é público e não guarda dados de chaves, PINs nem ID da planilh
    - clique em **Permitir**.
 5. Clique de novo em **Chaves Habitar → 1. Configurar sistema**. Uma mensagem mostra o que foi ajustado.
 
-Essa função define o fuso de Brasília, o idioma pt-BR e a exibição das datas, e cria a aba `Usuarios` com você como admin. Ela não altera o conteúdo das células existentes.
+Essa função define o fuso de Brasília, o idioma pt-BR e a exibição das datas, cria a aba `Usuarios` com você como admin e prepara a situação `Entregue ao comprador` (coluna Situação, aba `Listas` e aba `Resumo`). Pode ser rodada de novo sem efeito.
 
 ### 3. Cadastrar as pessoas
 
@@ -42,8 +42,6 @@ Para cada pessoa, inclusive você:
 A pessoa entra como `corretor`, com acesso ativo. O PIN fica guardado na aba `Usuarios` apenas como hash, então não dá para consultá-lo depois. Se alguém esquecer, defina um novo pelo mesmo menu.
 
 Para tirar o acesso de alguém, mude a coluna **Ativo** para `Não`. A pessoa sai na hora, sem precisar publicar nada.
-
-**Alternativa pelo editor:** na função `gerarHashDoPin`, troque `1234` pelo PIN, clique em **Executar** e copie o hash do registro de execução para a coluna `PIN (hash)`. Depois, volte o valor para `1234`.
 
 ### 4. Publicar o Aplicativo da Web
 
@@ -90,12 +88,14 @@ A URL continua a mesma. Não use "Nova implantação", porque ela cria outra URL
 Faça estes testes em uma chave qualquer. No fim, os registros de teste podem ser apagados da aba `Entradas e Saídas`: apague só as colunas de preenchimento (A:E e G:K) das últimas linhas, nunca as linhas do meio.
 
 - [ ] **Login:** entre com um PIN errado (aparece "Nome ou PIN incorretos") e depois com o certo.
-- [ ] **Painel:** devem aparecer 15 chaves, com CH-002 retirada com Adriana e devolução em 07/11/2026.
+- [ ] **Chaves:** as pílulas mostram a quantidade de cada situação, e cada uma fica com sua cor ao ser selecionada.
 - [ ] **Saída:** registre a saída de uma chave disponível. O Cadastro deve mostrar `Retirada`.
 - [ ] **Saída bloqueada:** abra o site em outro celular antes de atualizar a tela e tente retirar a mesma chave. Aparece "já está fora".
-- [ ] **Devolução:** toque em "Registrar devolução" duas vezes. O Cadastro mostra `Disponível` e a nova linha de `Entradas e Saídas` mostra `Habitar Imóveis` na Localização. A coluna "Com quem está" do Cadastro fica vazia nesse caso, porque é assim que a fórmula funciona.
-- [ ] **Atrasada:** registre uma saída e, na planilha, mude a Devolução prevista dessa linha para ontem. A chave passa para `Atrasada` e sobe para o topo do painel.
-- [ ] **Cadastro:** no Painel, toque em "Nova chave", com um login de corretor. O código sugerido é o próximo livre (`CH-016` na primeira vez), e a entrada inicial aparece em `Entradas e Saídas`.
+- [ ] **Devolução:** toque em "Registrar devolução" e depois em "Confirmar?". O Cadastro mostra `Disponível` e a nova linha de `Entradas e Saídas` mostra `Habitar Imóveis` na Localização. A coluna "Com quem está" do Cadastro fica vazia nesse caso, porque é assim que a fórmula funciona.
+- [ ] **Atrasada:** registre uma saída e, na planilha, mude a Devolução prevista dessa linha para ontem. A chave passa para `Atrasada` e sobe para o topo da lista.
+- [ ] **Cadastro:** toque em "Nova chave", com um login de corretor. O código sugerido é o próximo livre, e a entrada inicial aparece em `Entradas e Saídas`.
+- [ ] **Edição:** toque no lápis de um card, mude um campo e salve. A mudança aparece no Cadastro.
+- [ ] **Entrega:** toque em "Entregar" e informe o comprador. A chave vai para a aba Entregues, e o Cadastro mostra `Entregue ao comprador`.
 - [ ] **Fórmulas intactas:** confira na planilha que cada registro entrou na primeira linha vazia e que as colunas F e L (movimentos) e J:N e P (cadastro) continuam com fórmula.
 - [ ] **Duas pessoas ao mesmo tempo:** em dois celulares, registre saídas de chaves diferentes no mesmo instante. Devem surgir duas linhas, sem uma apagar a outra.
 - [ ] **Celular:** use o site pelo ícone na tela inicial.
@@ -106,9 +106,10 @@ Faça estes testes em uma chave qualquer. No fim, os registros de teste podem se
 - A sessão vale até 8 horas. O cache do Google guarda no máximo 6 horas por vez, então quem ficar mais de 6 horas sem usar o sistema precisa entrar de novo.
 - Toda a equipe pode cadastrar e editar chaves. Só o perfil `admin` exclui uma chave.
 - Excluir apaga o cadastro e todos os movimentos da chave, e só funciona com a chave na imobiliária ou devolvida ao proprietário. Uma cópia fica na aba `Chaves excluidas`.
-- Chave vendida: toque em "Entregar ao comprador" no card da chave. Se ela estiver com alguém, a devolução é registrada automaticamente antes da entrega. A chave sai do Painel e vai para a seção Entregues, com o histórico preservado. Se a venda não se concretizar, use "Registrar nova entrada".
-- A situação "Entregue ao comprador" precisa ser ativada uma vez, em **Chaves Habitar → 3. Ativar chaves entregues**.
+- Chave vendida: toque em "Entregar" no card da chave. Se ela estiver com alguém, a devolução é registrada automaticamente antes da entrega. A chave vai para a aba Entregues, com o histórico preservado. Se a venda for desfeita, abra a chave em Entregues e use "Registrar nova entrada".
 - Para um imóvel que saiu da carteira, prefira registrar uma saída com o motivo `Devolvida ao proprietário`. O histórico continua no sistema.
+- O Histórico do site mostra os 500 movimentos mais recentes. O registro completo fica na aba `Entradas e Saídas`.
+- A fonte é a Helvetica Now Display, usada apenas em aparelhos que a têm instalada; nos demais aparecem Helvetica Neue ou Arial. O arquivo da fonte não entra neste repositório público, porque a licença da Monotype proíbe distribuí-lo sem uma licença web.
 - Cinco PINs errados bloqueiam aquele nome por 15 minutos.
 - Quando chega à última linha preparada, o sistema abre novas linhas dentro da faixa das fórmulas, para que elas continuem lendo todos os registros.
 - Se alguém escrever direto na planilha, mantenha a ordem cronológica e não deixe linhas em branco no meio.
